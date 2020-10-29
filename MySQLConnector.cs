@@ -22,6 +22,7 @@ namespace CourseWork2
             connString = "Server=" + host + ";Database=" + database
                        + ";port="  + port + ";User Id="  + username + ";password=" + password;
             conn = new MySqlConnection(connString);
+            setTypes();
         }
 
         public override DataTable selectFrom(string Form)
@@ -35,6 +36,15 @@ namespace CourseWork2
             dataTable = dataSet.Tables[0];
             CloseCon();
             return dataTable;
+        }
+
+        protected void setTypes() 
+        {
+            Types.Clear();
+            foreach (var itr in Enum.GetValues(typeof(MySql.Data.MySqlClient.MySqlDbType)))
+            {
+                Types.Add(itr.ToString());
+            }
         }
     }
 }

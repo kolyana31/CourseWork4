@@ -23,6 +23,7 @@ namespace CourseWork2
                                                 host, port.ToString(), username,
                                                 password, database);
             conn = new NpgsqlConnection(connString);
+            setTypes();
         }
 
         public override List<object> getDataBaseTables()
@@ -40,6 +41,30 @@ namespace CourseWork2
             return temp;
         }
 
+        public override void setStructureOfDatabase()
+        {
+            OpenCon();
+            TablesTypes.Clear();
+            command = conn.CreateCommand();
+            command.CommandText = "SELECT table_name FROM information_schema.tables WHERE table_schema NOT IN ('information_schema','pg_catalog');";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                TablesTypes.Add(new DBTableStructure(reader.GetValue(0).ToString()));
+            }
+            foreach (var itr in TablesTypes)
+            {
+                reader.Close();
+                command.CommandText = $"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{itr.Name}'";
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    itr.VariablesNTypes.Add(new string[] { reader.GetValue(0).ToString(), reader.GetValue(1).ToString() });
+                }
+            }
+            CloseCon();
+        }
+
         public override DataTable selectFrom(string Form)
         {
             OpenCon();
@@ -51,6 +76,15 @@ namespace CourseWork2
             dataTable = dataSet.Tables[0];
             CloseCon();
             return dataTable;
+        }
+
+        protected void setTypes()
+        {
+            Types.Clear();
+            foreach (var itr in Enum.GetValues(typeof(NpgsqlTypes.NpgsqlDbType)))
+            {
+                Types.Add(itr.ToString());
+            }
         }
     }
 }
